@@ -15,22 +15,22 @@ from flask import Flask, jsonify
 # Part 1 - Building a Blockchain
 
 class Blockchain:
-    
+
     def __init__(self):
         self.chain = []
         self.createBlock(proof = 1, previousHash = '0')
-        
+
     def createBlock(self, proof, previousHash):
         block = {'index' : len(self.chain) + 1,
-                 'timestamp' : datetime.datetime.now(),
+                 'timestamp' : str(datetime.datetime.now()),
                  'proof' : proof,
                  'previousHash' : previousHash}
         self.chain.append(block)
         return block
-    
+
     def getPreviousBlock(self):
         return self.chain[-1]
-    
+
     def proofOfWork(self, previousProof):
         newProof = 1
         checkProof = False
@@ -41,34 +41,34 @@ class Blockchain:
             else:
                 newProof += 1
         return newProof
-    
+
     def hash(self, block):
-        encodedBlock = json.dumps(block, sort_keys = True, default=str).encode()
+        encodedBlock = json.dumps(block, sort_keys = True).encode()
         return hashlib.sha256(encodedBlock).hexdigest()
-    
+
     def isChainValid(self,chain):
         previousBlock = chain[0]
         blockIndex = 1
         while(blockIndex < len(chain)):
             block = chain[blockIndex]
-            
+
             #Check that the 'previous hash' actually matches the hash of the previous block
             if block['previousHash'] != self.hash(previousBlock):
                 return False
-            
+
             # Check validity of proofs, make sure 4 leading zeroes.
             previousProof =  previousBlock['proof']
             proof = block['proof']
             hashOperation = hashlib.sha256(str(proof**2 - previousProof**2).encode()).hexdigest()
-            
+
             if(hashOperation[:4] != '0000'):
                 return False
-            
+
             previousBlock = block
             blockIndex += 1
-            
+
         return True
-    
+
 # Part 2 - Mining our Blockchain
 
 # Creating a Web App
@@ -85,10 +85,10 @@ def mineBlock():
     previousBlock = blockchain.getPreviousBlock()
     previousProof = previousBlock['proof']
     proof = blockchain.proofOfWork(previousProof)
-    
+
     previousHash = blockchain.hash(previousBlock)
     block = blockchain.createBlock(proof, previousHash)
-    
+
     response = {'message' : 'Super duper awesome, you just mined a block!',
                 'index' : block['index'],
                 'timestamp' : block['timestamp'],
@@ -110,7 +110,7 @@ def checkValidity():
         response = {'message':'Everything looking ok!'}
     else:
         response = {'message':'We need to talk, something has happened!'}
-        
+
     return (jsonify(response), 200)
 
 # Running the app
